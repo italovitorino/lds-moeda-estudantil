@@ -1,4 +1,3 @@
-
 name: Deploy
 
 on:
@@ -20,9 +19,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
-          # Github path
           source: "codigo/back/**"
-          # VPS path
           target: "~/lds-moeda-estudantil"
 
       - name: Create MoedaEstudantil .env file
@@ -34,7 +31,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd ~/lds-moeda-estudantil/codigo/back
-            rm .env
+            rm -f .env
             touch .env
             echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
             echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
@@ -46,7 +43,7 @@ jobs:
             echo MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} >> .env
             echo MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} >> .env
 
-      - name: Build and Start Docker-compose
+      - name: Build and Start Docker Compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -55,5 +52,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd ~/lds-moeda-estudantil/codigo/back
-            docker-compose build --no-cache api
-            docker-compose up -d api
+            docker-compose down --remove-orphans || true
+            docker system prune -af || true
+            docker-compose build --no-cache
+            docker-compose up -d
